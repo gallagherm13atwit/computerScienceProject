@@ -107,8 +107,7 @@ public class TetrisGUI extends Application implements Initializable{
 			ArrayList<Integer> bottomBlocks = blockInControl.get(0).bottomBlocks();	//Array List that stores the blocks at the bottom of the Tetrimino
 			ArrayList<Integer> leftBlocks = blockInControl.get(0).sideBlocksLeft();	//Array List that stores the blocks at the left-most side of the Tetrimino
 			ArrayList<Integer> rightBlocks = blockInControl.get(0).sideBlocksRight();	//Array List that stores the block at the right-most side of the Tetrimino
-			int indexFourthBlock = tetriminoFalling[3];	//holds the index of the last block of the current Tetrimino
-			int blocksAboveNothing = 0;	//holds the number of blocks that from bottomBlocks that have no blocks immediately underneth them
+			boolean blocksAreAboveNothing = true;	//holds the number of blocks that from bottomBlocks that have no blocks immediately underneth them
 			int blocksAtSide = 0; //holds the number of blocks that appear immediately next to either leftBlocks or rightBlocks
 			int newRotWidth;	//holds the new rotation width of the newly created Tetrimino
 			int newRandomBlockType;	//creates the new Tetrimino type for the new Tetrimino
@@ -118,11 +117,16 @@ public class TetrisGUI extends Application implements Initializable{
 			{
 				for (int a = 0; a < bottomBlocks.size(); a++)	//for-loop that checks for any blocks immediately below the indexes of bottomBlocks
 				{
-					if (indexFourthBlock < 130 && grid[bottomBlocks.get(a) + 10].getFill().equals(Color.WHITE))
-						blocksAboveNothing++;
+					if (tetriminoFalling[3] < 130)
+					{
+						if (!grid[bottomBlocks.get(a) + 10].getFill().equals(Color.WHITE))
+							blocksAreAboveNothing = false;
+					}
+					else
+						blocksAreAboveNothing = false;
 				}
 					
-				if (blocksAboveNothing == bottomBlocks.size())	//if statement that drops the blocks of Tetrimino into the next blocks below based on the value of blocksAboveNothing
+				if (blocksAreAboveNothing)	//if statement that drops the blocks of Tetrimino into the next blocks below based on the value of blocksAboveNothing
 				{
 					for (int j = 3; j > -1; j--)	//for-loop that updates the indexes of the blocks in the current Tetrimino
 					{
@@ -130,12 +134,11 @@ public class TetrisGUI extends Application implements Initializable{
 						tetriminoFalling[j] += 10;
 						grid[tetriminoFalling[j]].setFill(currTetriminoColor);	//makes the new index the color of the Tetrimino
 					}
-					indexFourthBlock = tetriminoFalling[3];	//updates indexFourthBlock
 					for (int c = 0; c < bottomBlocks.size(); c++)	//updates the indexes of the blocks at the bottom of the Tetrimino
 					{
 						bottomBlocks.set(c, bottomBlocks.get(c) + 10);
 					}
-					blocksAboveNothing = 0;	//updates blocksAboveNothing
+					blocksAreAboveNothing = true;	//updates blocksAboveNothing
 				}
 				else	//else statement that activates if the Tetrimino is eith at the bottom of the screen or is immediately above another block
 				{
@@ -144,13 +147,12 @@ public class TetrisGUI extends Application implements Initializable{
 					bottomBlocks = blockInControl.get(index).bottomBlocks();	//updates bottomBlocks to the bottomBlocks of the next Tetrimino
 					leftBlocks = blockInControl.get(index).sideBlocksLeft();	//updates leftBlockss to the sideBlocksLeft of the next Tetrimino
 					rightBlocks = blockInControl.get(index).sideBlocksRight();	//updates rightBlockss to the sideBlocksRight of the next Tetrimino
-					indexFourthBlock = blockInControl.get(index).getFourthBlock();	//updates indexFourthBlock to the 4th block of the next Tetrimino
 					currTetriminoColor = blockInControl.get(index).getColor();	//updates the color of the indexes to that of the next Tetrimino
 					for (int b = 0; b < 4; b++)	//for-loop that creates the next Tetrimino on grid[]
 					{
 						grid[tetriminoFalling[b]].setFill(currTetriminoColor);
 					}
-					blocksAboveNothing = 0;
+					blocksAreAboveNothing = true;
 				
 					//creates a new Tetrimino and adds it ot blockInControl
 					newRandomBlockType = (int) (Math.random()*6);

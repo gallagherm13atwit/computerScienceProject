@@ -11,7 +11,7 @@ public class Tetrimino
 		int mostLeft = 0;	//int that holds the current index of a rectangle that is closest to the left side of the screen given currX
 		ArrayList<Integer> sideBlocksRight = new ArrayList<Integer>();	//ArrayList<Integer> that holds the indexes of the tetrimino blocks that will collide with rectangles on the right side (if any are present)
 		int mostRight = 0;	//int that holds the current index of a rectangle that is closest to the right side of the screen given currX
-		int rotationPoint = 0;	//int that holds the index of the rotation point rectangle in a given Tetrimino object
+		int rotationPoint = 0;	//int that holds the index of the fourBlocks[] that doesn't move relative to rotationWidth
 		int type = 0;	//int that holds the type of Tetrimino of value 0-6 (in order: Square, Line, T-Block, L-Block, Reverse L-Block, Z Block, and Reverse Z-Block)
 		Color colorBlock = Color.BLACK;	//Color object that stores the color of the Tetrimino (set during construction)
 		
