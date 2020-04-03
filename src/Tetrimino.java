@@ -5,13 +5,14 @@ import javafx.scene.paint.Color;
 public class Tetrimino
 	{	
 		int[] fourBlocks = new int[4];	//int[] array of the four blocks that make up the tetrimino
+		ArrayList<Integer> fake =new ArrayList<Integer>();
 		ArrayList<Integer> bottomBlocks = new ArrayList<Integer>();	//ArrayList<Integer> that holds the indexes of the tetrimino blocks on the bottom
 		int currX = 0;	//int for the current X value for both sideBlocksLeft() and sideBlocksRight() methods
 		ArrayList<Integer> sideBlocksLeft = new ArrayList<Integer>();	//ArrayList<Integer> that holds the indexes of the tetrimino blocks that will collide with rectangles on the left side (if any are present)
 		int mostLeft = 0;	//int that holds the current index of a rectangle that is closest to the left side of the screen given currX
 		ArrayList<Integer> sideBlocksRight = new ArrayList<Integer>();	//ArrayList<Integer> that holds the indexes of the tetrimino blocks that will collide with rectangles on the right side (if any are present)
 		int mostRight = 0;	//int that holds the current index of a rectangle that is closest to the right side of the screen given currX
-		int rotationPoint = 0;	//int that holds the index of the fourBlocks[] that doesn't move relative to rotationWidth
+		int rotationPoint = 0;	//int that holds the index of the fourBlocks[] that doesn't move relative to rotation index
 		int type = 0;	//int that holds the type of Tetrimino of value 0-6 (in order: Square, Line, T-Block, L-Block, Reverse L-Block, Z Block, and Reverse Z-Block)
 		Color colorBlock = Color.BLACK;	//Color object that stores the color of the Tetrimino (set during construction)
 		
@@ -78,7 +79,7 @@ public class Tetrimino
 					fourBlocks[1] = 5;
 					fourBlocks[2] = 13;
 					fourBlocks[3] = 14;
-					colorBlock = Color.GREEN;
+					colorBlock = Color.LIGHTGREEN;
 				}
 				rotationPoint = 2;
 			}
@@ -109,6 +110,16 @@ public class Tetrimino
 		public int getFourthBlock()
 		{
 			return fourBlocks[3];
+		}
+		
+		public int getBlockPlace(int index)
+		{
+			return fourBlocks[index];
+		}
+		
+		public void changeBlock(int index, int newPlace)
+		{
+			fourBlocks[index] = fourBlocks[index] + newPlace;
 		}
 		
 		/**
@@ -153,6 +164,7 @@ public class Tetrimino
 		 */
 		public ArrayList<Integer> sideBlocksRight()
 		{
+			sideBlocksRight = fake;
 			currX = fourBlocks[0]/10;	//evaluates currX to the first block
 			mostRight = fourBlocks[0];	//evaluates mostRight to the first block
 			for (int i = 1; i < 4; i++)	//for-loop that goes through each block starting from the 2nd block
