@@ -42,7 +42,7 @@ public class TetrisGUI extends Application implements Initializable{
 	public void start(Stage primaryStage)
 	{
 		int sceneWidth = 500;	//holds the width of the scene and grid[]
-		int sceneHeight = 750;	//holds the height of the scene and grid[]
+		int sceneHeight = 1000;	//holds the height of the scene and grid[]
 		int numGrid = ((sceneWidth/50)*(sceneHeight/50) - 10);	//number of grid spaces
 		double currX = 0.0;	//current X value used to construct grid[]
 		double currY = 0.0;	//current Y value used to construct grid[]
@@ -188,6 +188,7 @@ public class TetrisGUI extends Application implements Initializable{
 								for (int d = 0; d < 4; d++)
 									grid[tetInControl.get(index).getBlockPlace(d)].setFill(Color.WHITE);
 								
+								//gives a value to condition based on what kind of wall/floor kick was used
 								if (kickedWallLeft)
 								{
 									condition = 0;
@@ -201,10 +202,10 @@ public class TetrisGUI extends Application implements Initializable{
 									condition = 2;
 								}
 								
-								tetInControl.get(index).rotateRight(condition);
+								tetInControl.get(index).rotateRight(condition);	//rotates the Tetrimino right
 								
 								
-								for (int j = 0; j < 4; j++)
+								for (int j = 0; j < 4; j++)	//shows the Tetrimino in grid[]
 								{
 									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
 								}
@@ -222,6 +223,7 @@ public class TetrisGUI extends Application implements Initializable{
 								for (int d = 0; d < 4; d++)
 									grid[tetInControl.get(index).getBlockPlace(d)].setFill(Color.WHITE);
 								
+								//gives a value to condition based on what kind of wall/floor kick was used
 								if (kickedWallLeft)
 								{
 									condition = 0;
@@ -235,9 +237,9 @@ public class TetrisGUI extends Application implements Initializable{
 									condition = 2;
 								}
 								
-								tetInControl.get(index).rotateLeft(condition);
+								tetInControl.get(index).rotateLeft(condition);	//rotates the Tetrimino left
 								
-								for (int j = 0; j < 4; j++)
+								for (int j = 0; j < 4; j++) //shows the Tetrimino in grid[]
 								{
 									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
 								}
@@ -301,22 +303,33 @@ public class TetrisGUI extends Application implements Initializable{
 				});
 			}
 			
-			public boolean canRotate(boolean rOrL)	//true = right; false = left
+			/**Method that will be called when the user tries to rotate the Tetrimino.
+			 * It will be given a true value if the user is rotating right/clockwise
+			 * or false if the user is rotating left/counter-clockwise
+			 * 
+			 * @param rOrL
+			 * @return
+			 */
+			public boolean canRotate(boolean rOrL)
 			{
-				condition = -1;
-				kickedWallRight = false;
-				kickedWallLeft = false;
-				kickedFloor = false;
+				condition = -1;	//int value that updates based on wall/floor kicks
+				kickedWallRight = false;	//true if a right wall kick was needed
+				kickedWallLeft = false;	//true if a left wall kick was needed
+				kickedFloor = false;	//true if a floor kick was needed
 				
-				if (rOrL)
+				if (rOrL)	//if the user is rotating right
 				{
 					simRot = tetInControl.get(index).simRotateRight();
 					
-					for (int k = 0; k < 4; k++)
+					for (int k = 0; k < 4; k++)	//turns the Tetrimino black to avoid errors in rotating
 					{
 						grid[tetInControl.get(index).getBlockPlace(k)].setFill(Color.BLACK);
 					}
 				
+					//checks if a left wall kick is needed by seeing if a block either:
+					//(a) clipped out of bounds
+					//(b) intersects a block left of the rotation point
+					//(c) isn't taking up the space of a block within the Tetrimino
 					for (int i = 0; i < 4; i++)
 					{
 						if ((simRot[i]%10 == 9 && tetInControl.get(index).getBlockPlace(i)%10 <= 1)
@@ -331,6 +344,12 @@ public class TetrisGUI extends Application implements Initializable{
 							
 						}
 					}
+					
+					//checks if a right wall kick is needed by seeing if a block either:
+					//(a) clipped out of bounds
+					//(b) intersects a block right of the rotation point
+					//(c) isn't taking up the space of a block within the Tetrimino
+					//(d) didn't need assistance from a left wall kick
 					for (int k = 0; k < 4; k++)
 					{
 						if (!kickedWallLeft && (simRot[k]%10 == 0 && tetInControl.get(index).getBlockPlace(k)%10 >= 8)
@@ -344,6 +363,8 @@ public class TetrisGUI extends Application implements Initializable{
 							k = 0;
 						}
 					}
+					
+					//determines if the Tetrimino is able to rotate based on if the blocks are intersecting an already existing block
 					for (int d = 0; d < 4; d++)
 					{
 						if (!grid[simRot[d]].getFill().equals(Color.WHITE) && !grid[simRot[d]].getFill().equals(Color.BLACK))
@@ -364,7 +385,11 @@ public class TetrisGUI extends Application implements Initializable{
 					{
 						grid[tetInControl.get(index).getBlockPlace(k)].setFill(Color.BLACK);
 					}
-				
+					
+					//checks if a left wall kick is needed by seeing if a block either:
+					//(a) clipped out of bounds
+					//(b) intersects a block left of the rotation point
+					//(c) isn't taking up the space of a block within the Tetrimino
 					for (int i = 0; i < 4; i++)
 					{
 						if ((simRot[i]%10 == 9 && tetInControl.get(index).getBlockPlace(i)%10 <= 1)
@@ -378,6 +403,12 @@ public class TetrisGUI extends Application implements Initializable{
 							i = 0;
 						}
 					}
+					
+					//checks if a right wall kick is needed by seeing if a block either:
+					//(a) clipped out of bounds
+					//(b) intersects a block right of the rotation point
+					//(c) isn't taking up the space of a block within the Tetrimino
+					//(d) didn't need assistance from a left wall kick
 					for (int k = 0; k < 4; k++)
 					{
 						if (!kickedWallLeft && (simRot[k]%10 == 0 && tetInControl.get(index).getBlockPlace(k)%10 >= 8)
@@ -391,6 +422,8 @@ public class TetrisGUI extends Application implements Initializable{
 							k = 0;
 						}
 					}
+					
+					//determines if the Tetrimino is able to rotate based on if the blocks are intersecting an already existing block
 					for (int d = 0; d < 4; d++)
 					{
 						if (!grid[simRot[d]].getFill().equals(Color.WHITE) && !grid[simRot[d]].getFill().equals(Color.BLACK))

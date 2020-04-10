@@ -20,8 +20,8 @@ public class Tetrimino
 	int blockOrientation = 0; // what is the orientation of the block (default is 0)
 	int[] colisionBlocks;	// finds the blocks surrounding the Tetrimino that could colide with it if it were to rotate **UNLESS** its a line
 	int [] colisionBlocksLine; // finds the blocks surrounding the Tetrimino that could colide with it if it were to rotate **IF** its a line
-	int[] simRot = {0, 0, 0, 0};
-	int[] temp = {0, 0, 0, 0};
+	int[] simRot = {0, 0, 0, 0};	//int[] of the distances between values within fourBlocks[] and fourBlocks[rotationPoint] using corresponding indexes
+	int[] temp = {0, 0, 0, 0};	//temporary int[] used to dwitch values of fourBlocks[]
 	int [] rotRules = {-11, -10, -9, 1, 11, 10, 9, -1}; //the location of the block in relation to the origin on the grid
 
 	/**
@@ -111,6 +111,7 @@ public class Tetrimino
 		this.oldRotPointVal = fourBlocks[rotationPoint];
 	}
 	
+	//returns true if value appears within fourBlocks[]
 	public boolean alreadyIndex(int value)
 	{
 		for (int i = 0; i < 4; i++)
@@ -122,6 +123,7 @@ public class Tetrimino
 		return false;
 	}
 	
+	//updates the order of fourBlocks[] from lowest to highest
 	public void updateOrder()
 	{
 		boolean allCorrect = false;
@@ -160,6 +162,7 @@ public class Tetrimino
 		}
 	}
 	
+	//returns an int[] of the values of fourBlocks[] if they were to "rotate" clockwise in accordance with rotRules[]
 	public int[] simRotateRight()
 	{
 		simRot = this.getRotPointDiff();
@@ -182,6 +185,8 @@ public class Tetrimino
 		return simRot;
 	}
 	
+	//"rotates" the values of fourBlocks[] clockwise in accordance with rotRules
+	//int condition determines if the values in fourBlocks[] need to be moved based on potential wall/floor kicks
 	public void rotateRight(int condition)
 	{
 		simRot = this.getRotPointDiff();
@@ -226,11 +231,7 @@ public class Tetrimino
 		this.updateOrder();
 	}
 	
-	/**
-	 * This is mainly going to be the same thing as simRotateRight
-	 * but instead of "rotRules[(i+2)%8]" it'll be
-	 * "rotRules[(i-2)%8] (like you said).
-	 */
+	//returns an int[] of the values of fourBlocks[] if they were to "rotate" counter-clockwise in accordance with rotRules[]
 	public int[] simRotateLeft()
 	{
 		simRot = this.getRotPointDiff();
@@ -253,11 +254,8 @@ public class Tetrimino
 		return simRot;
 	}
 	
-	/**
-	 * This is mainly going to be the same thing as rotateRight
-	 * but instead of "rotRules[(i+2)%8]" it'll be
-	 * "rotRules[(i-2)%8] (like you said).
-	 */
+	//"rotates" the values of fourBlocks[] counter-clockwise in accordance with rotRules
+	//int condition determines if the values in fourBlocks[] need to be moved based on potential wall/floor kicks
 	public void rotateLeft(int condition)
 	{
 		simRot = this.getRotPointDiff();
@@ -444,6 +442,7 @@ public class Tetrimino
 		}
 	}
 	
+	//gives an int[] of the distance between values of fourBlocks[] and fourBlocks[rotationPoint]
 	public int[] getRotPointDiff() {
 		
 		for (int i = 0; i < 4; ++i) {
@@ -491,7 +490,7 @@ public class Tetrimino
 	}
 
 	/**
-	 * Returs sideBlocksRight<Integer> after finding
+	 * Returns sideBlocksRight<Integer> after finding
 	 * and adding the Tetrimino's blocks (from top to bottom)
 	 * which are closest to the right-hand side of the screen
 	 * for each row (example: a Z-Block would return
