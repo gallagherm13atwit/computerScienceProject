@@ -42,13 +42,12 @@ public class TetrisGUI extends Application implements Initializable{
 	public void start(Stage primaryStage)
 	{
 		int sceneWidth = 500;	//holds the width of the scene and grid[]
-		int sceneHeight = 500;	//holds the height of the scene and grid[]
+		int sceneHeight = 750;	//holds the height of the scene and grid[]
 		int numGrid = ((sceneWidth/50)*(sceneHeight/50) - 10);	//number of grid spaces
 		double currX = 0.0;	//current X value used to construct grid[]
 		double currY = 0.0;	//current Y value used to construct grid[]
 		int rotWidth = 0;	//holds the rotation width of a Tetrimino object
 		int randomBlockType = 0;	//creates the block type of a Tetrimino object
-		int[] currentBlocks = new int[4];	//holds the indexes of the currently controlled Tetrimino
 
 		Rectangle[] grid = new Rectangle[numGrid];	//Rectangle array that creates the grid that shows the Tetrimino objects and allows the user to play
 		for (int c = 0; c < grid.length; c++)	//for-loop that initializes the Rectangles in grid[]
@@ -59,7 +58,7 @@ public class TetrisGUI extends Application implements Initializable{
 		ArrayList<Tetrimino> tetInControl = new ArrayList<Tetrimino>();	//ArrayList that holds Tetrimino objects
 		for (int a = 0; a < 4; a++)	//for-loop that creates the first 4 Tetrimino objects within tetInControl
 		{
-			randomBlockType = (int) (Math.random()*5 + 2);	//uses Math.random() to store a value from 0-6 to randomBlockType
+			randomBlockType = (int) (Math.random()*5+2);	//uses Math.random() to store a value from 0-6 to randomBlockType
 			if (randomBlockType == 0)	//if-else statements that determines rotWidth based on randomBlockType
 				rotWidth = 2;
 			else if (randomBlockType == 1)
@@ -87,11 +86,9 @@ public class TetrisGUI extends Application implements Initializable{
 				currX+=50.0;
 		}
 
-		currentBlocks = tetInControl.get(0).getBlocks();	//initializes currentBlocks to the first Tetrimino object's indexes in tetInControl
-
 		for (int k = 0; k < 4; k++)	//adds the blocks from currentBlocks into the grid[] by filling the indexes with the Tetrimino's color
 		{
-			grid[currentBlocks[k]].setFill(tetInControl.get(0).getColor());
+			grid[tetInControl.get(0).getBlockPlace(k)].setFill(tetInControl.get(0).getColor());
 		}
 
 		//creates the scene
@@ -115,6 +112,11 @@ public class TetrisGUI extends Application implements Initializable{
 			boolean cantMoveRight = false;	//boolean status for if the tetrimino can move right
 			//boolean[] collisionBlocks = new boolean[8]; // detects true if surrounding grid blocks are not white
 			//int [] rotRules = {-11, -10, -9, 1, 11, 10, 9, -1}; //the location of the block in relation to the origin on the grid
+			int[] simRot = new int[4];
+			int condition = -1;
+			boolean kickedWallRight = false;
+			boolean kickedWallLeft = false;
+			boolean kickedFloor = false;
 
 			@Override
 			public void handle(ActionEvent time)
@@ -164,7 +166,7 @@ public class TetrisGUI extends Application implements Initializable{
 					blocksAreAboveNothing = true;
 
 					//creates a new Tetrimino and adds it to tetInControl
-					newRandomBlockType = (int) (Math.random()*5 + 2);
+					newRandomBlockType = (int) (Math.random()*5+2);
 					if (newRandomBlockType == 0)
 						newRotWidth = 2;
 					else if (newRandomBlockType == 1)
@@ -186,10 +188,26 @@ public class TetrisGUI extends Application implements Initializable{
 								for (int d = 0; d < 4; d++)
 									grid[tetInControl.get(index).getBlockPlace(d)].setFill(Color.WHITE);
 								
-								tetInControl.get(index).rotateRight();
+								if (kickedWallLeft)
+								{
+									condition = 0;
+								}
+								else if (kickedWallRight)
+								{
+									condition = 1;
+								}
+								else if (kickedFloor)
+								{
+									condition = 2;
+								}
 								
-								for (int i = 0; i < 4; i++)
-									grid[tetInControl.get(index).getBlockPlace(i)].setFill(currTetriminoColor);
+								tetInControl.get(index).rotateRight(condition);
+								
+								
+								for (int j = 0; j < 4; j++)
+								{
+									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
+								}
 								
 								bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks
 								leftBlocks = tetInControl.get(index).sideBlocksLeft();	//updates leftBlocks
@@ -201,7 +219,32 @@ public class TetrisGUI extends Application implements Initializable{
 						{
 							if (tetInControl.get(index).getType() > 1 && canRotate(false))
 							{
-								//basically copy & paste the code from KeyCode.UP into this
+								for (int d = 0; d < 4; d++)
+									grid[tetInControl.get(index).getBlockPlace(d)].setFill(Color.WHITE);
+								
+								if (kickedWallLeft)
+								{
+									condition = 0;
+								}
+								else if (kickedWallRight)
+								{
+									condition = 1;
+								}
+								else if (kickedFloor)
+								{
+									condition = 2;
+								}
+								
+								tetInControl.get(index).rotateLeft(condition);
+								
+								for (int j = 0; j < 4; j++)
+								{
+									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
+								}
+								
+								bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks
+								leftBlocks = tetInControl.get(index).sideBlocksLeft();	//updates leftBlocks
+								rightBlocks = tetInControl.get(index).sideBlocksRight();	//updates rightBlocks
 							}
 						}
 						
@@ -260,9 +303,14 @@ public class TetrisGUI extends Application implements Initializable{
 			
 			public boolean canRotate(boolean rOrL)	//true = right; false = left
 			{
+				condition = -1;
+				kickedWallRight = false;
+				kickedWallLeft = false;
+				kickedFloor = false;
+				
 				if (rOrL)
 				{
-					int[] simRot = tetInControl.get(index).simRotateRight();
+					simRot = tetInControl.get(index).simRotateRight();
 					
 					for (int k = 0; k < 4; k++)
 					{
@@ -271,7 +319,34 @@ public class TetrisGUI extends Application implements Initializable{
 				
 					for (int i = 0; i < 4; i++)
 					{
-						if (!grid[simRot[i]].getFill().equals(Color.WHITE) && !grid[simRot[i]].getFill().equals(Color.BLACK)/*ADD A CONDITION: && kickedFloor == 0*/)
+						if ((simRot[i]%10 == 9 && tetInControl.get(index).getBlockPlace(i)%10 <= 1)
+								|| (simRot[i]%10 < tetInControl.get(index).getRotationPoint()%10 && !grid[simRot[i]].getFill().equals(Color.WHITE) && !grid[simRot[i]].getFill().equals(Color.BLACK)
+								&& !tetInControl.get(index).alreadyIndex(simRot[i])))
+						{
+							for (int j = 0; j < 4; j++)
+								simRot[j] += 1;
+							
+							kickedWallLeft = true;
+							i = 0;
+							
+						}
+					}
+					for (int k = 0; k < 4; k++)
+					{
+						if (!kickedWallLeft && (simRot[k]%10 == 0 && tetInControl.get(index).getBlockPlace(k)%10 >= 8)
+								|| (simRot[k]%10 > tetInControl.get(index).getRotationPoint()%10 && !grid[simRot[k]].getFill().equals(Color.WHITE) && !grid[simRot[k]].getFill().equals(Color.BLACK)
+								&& !tetInControl.get(index).alreadyIndex(simRot[k])))
+						{
+							for (int j = 0; j < 4; j++)
+								simRot[j] -= 1;
+							
+							kickedWallRight = true;
+							k = 0;
+						}
+					}
+					for (int d = 0; d < 4; d++)
+					{
+						if (!grid[simRot[d]].getFill().equals(Color.WHITE) && !grid[simRot[d]].getFill().equals(Color.BLACK))
 						{
 							for (int j = 0; j < 4; j++)
 							{
@@ -283,7 +358,50 @@ public class TetrisGUI extends Application implements Initializable{
 				}
 				else
 				{
-					//same thing as above but lefty
+					simRot = tetInControl.get(index).simRotateLeft();
+					
+					for (int k = 0; k < 4; k++)
+					{
+						grid[tetInControl.get(index).getBlockPlace(k)].setFill(Color.BLACK);
+					}
+				
+					for (int i = 0; i < 4; i++)
+					{
+						if ((simRot[i]%10 == 9 && tetInControl.get(index).getBlockPlace(i)%10 <= 1)
+								|| (simRot[i]%10 < tetInControl.get(index).getRotationPoint()%10 && !grid[simRot[i]].getFill().equals(Color.WHITE) && !grid[simRot[i]].getFill().equals(Color.BLACK)
+								&& !tetInControl.get(index).alreadyIndex(simRot[i])))
+						{
+							for (int j = 0; j < 4; j++)
+								simRot[j] += 1;
+							
+							kickedWallLeft = true;
+							i = 0;
+						}
+					}
+					for (int k = 0; k < 4; k++)
+					{
+						if (!kickedWallLeft && (simRot[k]%10 == 0 && tetInControl.get(index).getBlockPlace(k)%10 >= 8)
+								|| (simRot[k]%10 > tetInControl.get(index).getRotationPoint()%10 && !grid[simRot[k]].getFill().equals(Color.WHITE) && !grid[simRot[k]].getFill().equals(Color.BLACK)
+								&& !tetInControl.get(index).alreadyIndex(simRot[k])))
+						{
+							for (int j = 0; j < 4; j++)
+								simRot[j] -= 1;
+							
+							kickedWallRight = true;
+							k = 0;
+						}
+					}
+					for (int d = 0; d < 4; d++)
+					{
+						if (!grid[simRot[d]].getFill().equals(Color.WHITE) && !grid[simRot[d]].getFill().equals(Color.BLACK))
+						{
+							for (int j = 0; j < 4; j++)
+							{
+								grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
+							}
+							return false;
+						}
+					}
 				}
 				
 				return true;

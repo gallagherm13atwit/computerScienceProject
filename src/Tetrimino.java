@@ -21,6 +21,7 @@ public class Tetrimino
 	int[] colisionBlocks;	// finds the blocks surrounding the Tetrimino that could colide with it if it were to rotate **UNLESS** its a line
 	int [] colisionBlocksLine; // finds the blocks surrounding the Tetrimino that could colide with it if it were to rotate **IF** its a line
 	int[] simRot = {0, 0, 0, 0};
+	int[] temp = {0, 0, 0, 0};
 	int [] rotRules = {-11, -10, -9, 1, 11, 10, 9, -1}; //the location of the block in relation to the origin on the grid
 
 	/**
@@ -45,7 +46,7 @@ public class Tetrimino
 			fourBlocks[1] = 5;
 			fourBlocks[2] = 14;
 			fourBlocks[3] = 15;
-			rotationPoint = 0;
+			this.rotationPoint = 0;
 			colorBlock = Color.YELLOW;
 		}
 		else if (rotationWidth == 3 && blockType > 1)
@@ -56,7 +57,7 @@ public class Tetrimino
 				fourBlocks[1] = 13;
 				fourBlocks[2] = 14;
 				fourBlocks[3] = 15;
-				rotationPoint = 2;
+				this.rotationPoint = 2;
 				colorBlock = Color.PURPLE;
 			}
 			else if (blockType == 3)	//L-Block
@@ -65,7 +66,7 @@ public class Tetrimino
 				fourBlocks[1] = 13;
 				fourBlocks[2] = 14;
 				fourBlocks[3] = 15;
-				rotationPoint = 2;
+				this.rotationPoint = 2;
 				colorBlock = Color.ORANGE;
 			}
 			else if (blockType == 4)	//Reverse L-Block
@@ -74,7 +75,7 @@ public class Tetrimino
 				fourBlocks[1] = 13;
 				fourBlocks[2] = 14;
 				fourBlocks[3] = 15;
-				rotationPoint = 2;
+				this.rotationPoint = 2;
 				colorBlock = Color.BLUE;
 			}
 			else if (blockType == 5)	//Z Block
@@ -83,7 +84,7 @@ public class Tetrimino
 				fourBlocks[1] = 4;
 				fourBlocks[2] = 14;
 				fourBlocks[3] = 15;
-				rotationPoint = 2;
+				this.rotationPoint = 2;
 				colorBlock = Color.RED;
 			}
 			else if (blockType == 6)	//Reverse Z-Block
@@ -92,7 +93,7 @@ public class Tetrimino
 				fourBlocks[1] = 5;
 				fourBlocks[2] = 13;
 				fourBlocks[3] = 14;
-				rotationPoint = 3;
+				this.rotationPoint = 3;
 				colorBlock = Color.LIGHTGREEN;
 			}
 		}
@@ -102,12 +103,23 @@ public class Tetrimino
 			fourBlocks[1] = 4;
 			fourBlocks[2] = 5;
 			fourBlocks[3] = 6;
-			rotationPoint = 0;
+			this.rotationPoint = 0;
 			colorBlock = Color.LIGHTBLUE;
 
 		}
 		
-		oldRotPointVal = fourBlocks[rotationPoint];
+		this.oldRotPointVal = fourBlocks[rotationPoint];
+	}
+	
+	public boolean alreadyIndex(int value)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			if (value == fourBlocks[i])
+				return true;
+		}
+		
+		return false;
 	}
 	
 	public void updateOrder()
@@ -151,7 +163,7 @@ public class Tetrimino
 	public int[] simRotateRight()
 	{
 		simRot = this.getRotPointDiff();
-		int[] temp = this.getRotPointDiff();
+		temp = this.getRotPointDiff();
 		for (int j = 0; j < 4; j++)
 		{
 			for (int i = 0; i < 8; i++)
@@ -170,7 +182,7 @@ public class Tetrimino
 		return simRot;
 	}
 	
-	public void rotateRight()
+	public void rotateRight(int condition)
 	{
 		simRot = this.getRotPointDiff();
 		
@@ -184,6 +196,32 @@ public class Tetrimino
 				}
 			}
 		}
+		
+		if (condition == 0)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				fourBlocks[i] += 1;
+			}
+			oldRotPointVal += 1;
+		}
+		else if (condition == 1)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				fourBlocks[i] -= 1;
+			}
+			oldRotPointVal-=1;
+		}
+		else if (condition == 2)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				fourBlocks[i] -= 10;
+			}
+			oldRotPointVal-=10;
+		}
+		
 		this.changeOrientation(true);
 		this.updateOrder();
 	}
@@ -196,6 +234,21 @@ public class Tetrimino
 	public int[] simRotateLeft()
 	{
 		simRot = this.getRotPointDiff();
+		temp = this.getRotPointDiff();
+		for (int j = 0; j < 4; j++)
+		{
+			for (int i = 0; i < 8; i++)
+			{
+				if (j == rotationPoint)
+				{
+					simRot[j] = fourBlocks[j];
+				}
+				else if (temp[j] == rotRules[i])
+				{
+					simRot[j] = fourBlocks[rotationPoint] + rotRules[(i+6)%8];
+				}
+			}
+		}
 		
 		return simRot;
 	}
@@ -205,8 +258,46 @@ public class Tetrimino
 	 * but instead of "rotRules[(i+2)%8]" it'll be
 	 * "rotRules[(i-2)%8] (like you said).
 	 */
-	public void rotateLeft()
+	public void rotateLeft(int condition)
 	{
+		simRot = this.getRotPointDiff();
+		
+		for (int i = 0; i < 8; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				if (simRot[j] == rotRules[i])
+				{
+					fourBlocks[j] = fourBlocks[rotationPoint] + rotRules[(i+6)%8];
+				}
+			}
+		}
+		
+		if (condition == 0)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				fourBlocks[i] += 1;
+			}
+			oldRotPointVal += 1;
+		}
+		else if (condition == 1)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				fourBlocks[i] -= 1;
+			}
+			oldRotPointVal-=1;
+		}
+		else if (condition == 2)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				fourBlocks[i] -= 10;
+			}
+			oldRotPointVal-=10;
+		}
+		
 		this.changeOrientation(false);
 		this.updateOrder();
 	}
@@ -233,8 +324,25 @@ public class Tetrimino
 	{
 		simRot = this.getRotPointDiff();
 		
-		//determine if wall==true or wall==false 
-		//THEN if rotation==true or rotation==false
+		if (rotation)	//if rotating right
+		{
+			simRot = this.simRotateRight();
+		}
+		else//if rotating left
+		{
+			simRot = this.simRotateLeft();
+		}
+		
+		if (wall)	//if wall is right of rotPoint
+		{
+			for (int i = 0; i < 4; i++)
+				simRot[i] -= 1;
+		}
+		else //if wall is left of rotPoint
+		{
+			for (int i = 0; i < 4; i++)
+				simRot[i] += 1;
+		}
 		
 		return simRot;
 	}
@@ -252,6 +360,16 @@ public class Tetrimino
 	public int[] simFloorKick(boolean rotation)
 	{
 		simRot = this.getRotPointDiff();
+		
+		if (rotation)
+			simRot = simRotateRight();
+		else
+			simRot = simRotateLeft();
+		
+		for (int i = 0; i < 4; i++)
+		{
+			simRot[i] -= 10;
+		}
 		
 		return simRot;
 	}
