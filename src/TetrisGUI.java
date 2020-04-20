@@ -14,10 +14,12 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 /**
- * This is the TetrisGUI class that has been updated to include
- * speed increases as of 4/16/2020
+ * This is the TetrisGUI class that has been completed
+ * as of 4/20/2020
  * 
- * @author mgall
+ * Program can be run either in this file or in Tetrimino.java
+ * 
+ * @author Matthew Gallagher & Matthew Fairneny
  *
  */
 public class TetrisGUI extends Application{
