@@ -13,7 +13,6 @@ public class Tetrimino
 	int mostRight = 0;	//int that holds the current index of a rectangle that is closest to the right side of the screen given currX
 	int rotationPoint = 0;	//int that holds the index of the fourBlocks[] that doesn't move relative to rotation index
 	int oldRotPointVal = 0;
-	int rotWidth = 0; // Width of rotation of Tetrimino
 	int[] rotPointDiff = new int [4]; // Array that stores the location of the other 3 blocks in the Tetrimino surrounding the rotationPoint
 	int type = 0;	//int that holds the type of Tetrimino of value 0-6 (in order: Square, Line, T-Block, L-Block, Reverse L-Block, Z Block, and Reverse Z-Block)
 	Color colorBlock = Color.BLACK;	//Color object that stores the color of the Tetrimino (set during construction)
@@ -33,12 +32,12 @@ public class Tetrimino
 	 * @param rotationWidth
 	 * @param blockType
 	 */
-	public Tetrimino(int rotationWidth, int blockType)
+	public Tetrimino(int blockType)
 	{
 		type = blockType;
-		rotWidth = rotationWidth;
+		
 
-		if (rotationWidth == 2 && blockType == 0)	//Square
+		if (blockType == 0)	//Square
 		{
 			fourBlocks[0] = 4;
 			fourBlocks[1] = 5;
@@ -47,7 +46,7 @@ public class Tetrimino
 			this.rotationPoint = 0;
 			colorBlock = Color.YELLOW;
 		}
-		else if (rotationWidth == 3 && blockType > 1)
+		else if (blockType > 1)
 		{
 			if (blockType == 2)	//T-Block
 			{
@@ -95,7 +94,7 @@ public class Tetrimino
 				colorBlock = Color.LIGHTGREEN;
 			}
 		}
-		else if (rotationWidth == 4 && blockType == 1)	//Line Block
+		else if (blockType == 1)	//Line Block
 		{
 			fourBlocks[0] = 3; 
 			fourBlocks[1] = 4;
@@ -592,12 +591,6 @@ public class Tetrimino
 		return lineIndex;
 	}
 
-	//Returns the fourBlocks integer array
-	public int[] getBlocks()
-	{
-		return fourBlocks;
-	}
-
 	//Returns colorBlock
 	public Color getColor()
 	{
@@ -608,12 +601,6 @@ public class Tetrimino
 	public int getType()
 	{
 		return type;
-	}
-	
-	//Returns the RotationWidth of the Tetrimino
-	public int getRotWidth()
-	{
-		return rotWidth;
 	}
 	
 	//Returns the rotationPoint of the Tetrimino
@@ -671,6 +658,8 @@ public class Tetrimino
 					bottomBlocks.add(fourBlocks[j]);
 			}
 		}
+		else if (type == 0)
+			bottomBlocks.add(fourBlocks[2]);
 
 		return bottomBlocks;
 	}
