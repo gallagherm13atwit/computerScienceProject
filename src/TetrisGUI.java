@@ -84,7 +84,7 @@ public class TetrisGUI extends Application{
 		
 		Text gameStatus = new Text(175, 330, String.format(""));
 		gameStatus.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 20));
-		Text controls = new Text(525, 800, String.format("LEFT ARROW - Move Left%n%nRIGHT ARROW - Move Right%n%nUP ARROW - Rotate Right%n%nDOWN ARROW - Rotate Left%n%nSPACE - Hard Drop%n%nZ - Soft Drop"));
+		Text controls = new Text(525, 770, String.format("LEFT ARROW - Move Left%n%nRIGHT ARROW - Move Right%n%nUP ARROW - Rotate Right%n%nDOWN ARROW - Rotate Left%n%nSPACE - Hard Drop%n%nZ - Soft Drop%n%nH - Hold Block (once per turn)"));
 		controls.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 15));
 		Text holding = new Text(525, 20, String.format("Currently Holding"));
 		holding.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 15));
@@ -93,13 +93,13 @@ public class TetrisGUI extends Application{
 		containHolding.setStroke(Color.BLACK);
 		containHolding.setX(525);
 		containHolding.setY(30);
-		Text upNext = new Text(525, 270, String.format("Next 3 Blocks"));
+		Text upNext = new Text(525, 250, String.format("Next 3 Blocks"));
 		upNext.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 15));
-		Rectangle containNext = new Rectangle(200, 500);
+		Rectangle containNext = new Rectangle(200, 480);
 		containNext.setFill(Color.WHITE);
 		containNext.setStroke(Color.BLACK);
 		containNext.setX(525);
-		containNext.setY(280);
+		containNext.setY(260);
 		p.getChildren().add(gameStatus);
 		p.getChildren().add(controls);
 		p.getChildren().add(holding);
@@ -124,7 +124,7 @@ public class TetrisGUI extends Application{
 			tetComing[i].setFill(tetInControl.get(1).getColor());
 			tetComing[i].setStroke(Color.GREY);
 			tetComing[i].setX((tetInControl.get(1).getBlockPlace(i)%10)*40 + 430);
-			tetComing[i].setY((tetInControl.get(1).getBlockPlace(i)/10)*40 + 330);
+			tetComing[i].setY((tetInControl.get(1).getBlockPlace(i)/10)*40 + 290);
 			p.getChildren().add(tetComing[i]);
 		}
 		for (int i = 4; i < 8; i++)
@@ -133,7 +133,7 @@ public class TetrisGUI extends Application{
 			tetComing[i].setFill(tetInControl.get(2).getColor());
 			tetComing[i].setStroke(Color.GREY);
 			tetComing[i].setX((tetInControl.get(2).getBlockPlace(i-4)%10)*40 + 430);
-			tetComing[i].setY((tetInControl.get(2).getBlockPlace(i-4)/10)*40 + 490);
+			tetComing[i].setY((tetInControl.get(2).getBlockPlace(i-4)/10)*40 + 450);
 			p.getChildren().add(tetComing[i]);
 		}
 		for (int i = 8; i < 12; i++)
@@ -142,7 +142,7 @@ public class TetrisGUI extends Application{
 			tetComing[i].setFill(tetInControl.get(3).getColor());
 			tetComing[i].setStroke(Color.GREY);
 			tetComing[i].setX((tetInControl.get(3).getBlockPlace(i-8)%10)*40 + 430);
-			tetComing[i].setY((tetInControl.get(3).getBlockPlace(i-8)/10)*40 + 650);
+			tetComing[i].setY((tetInControl.get(3).getBlockPlace(i-8)/10)*40 + 610);
 			p.getChildren().add(tetComing[i]);
 		}
 
@@ -983,7 +983,7 @@ public class TetrisGUI extends Application{
 				{
 					tetComing[j].setFill(tetInControl.get(index+3).getColor());
 					tetComing[j].setX((tetInControl.get(index+3).getBlockPlace(j-8)%10)*40 + 430);
-					tetComing[j].setY((tetInControl.get(index+3).getBlockPlace(j-8)/10)*40 + 650);
+					tetComing[j].setY((tetInControl.get(index+3).getBlockPlace(j-8)/10)*40 + 610);
 				}
 			}
 		};
