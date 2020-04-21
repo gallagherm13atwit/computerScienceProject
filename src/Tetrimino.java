@@ -282,14 +282,20 @@ public class Tetrimino
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				fourBlocks[i] += 2;
+				if (lineIndex == 2)
+					fourBlocks[i] += 2;
+				else if (lineIndex == 0)
+					fourBlocks[i] += 1;
 			}
 		}
 		else if (condition == 1)
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				fourBlocks[i] -= 2;
+				if (lineIndex == 2)
+					fourBlocks[i] -= 1;
+				else if (lineIndex == 0)
+					fourBlocks[i] -= 2;
 			}
 		}
 		else if (condition == 2)
@@ -389,13 +395,13 @@ public class Tetrimino
 			else if (lineIndex == 3)
 			{
 				if (i == 0)
-					simRot[i] = fourBlocks[i] - 8;
-				else if (i == 1)
-					simRot[i] = fourBlocks[i] + 1;
-				else if (i == 2)
-					simRot[i] = fourBlocks[i] + 10;
-				else
 					simRot[i] = fourBlocks[i] + 19;
+				else if (i == 1)
+					simRot[i] = fourBlocks[i] + 10;
+				else if (i == 2)
+					simRot[i] = fourBlocks[i] + 1;
+				else
+					simRot[i] = fourBlocks[i] - 8;
 			}
 			else if (lineIndex == 2)
 			{
@@ -486,14 +492,20 @@ public class Tetrimino
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				fourBlocks[i] += 2;
+				if (lineIndex == 0)
+					fourBlocks[i] += 2;
+				else if (lineIndex == 2)
+					fourBlocks[i] += 1;
 			}
 		}
 		else if (condition == 1)
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				fourBlocks[i] -= 2;
+				if (lineIndex == 0)
+					fourBlocks[i] -= 1;
+				else if (lineIndex == 2)
+					fourBlocks[i] -= 2;
 			}
 		}
 		else if (condition == 2)

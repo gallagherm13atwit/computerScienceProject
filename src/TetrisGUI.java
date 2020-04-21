@@ -307,6 +307,7 @@ public class TetrisGUI extends Application{
 
 								newRandomBlockType = (int) (Math.random()*7);
 								tetInControl.add(new Tetrimino(newRandomBlockType));
+								updateTetComing();
 							}
 							else
 							{
@@ -829,14 +830,22 @@ public class TetrisGUI extends Application{
 						//(a) clipped out of bounds
 						//(b) intersects a block left of the rotation point
 						//(c) isn't taking up the space of a block within the Tetrimino
-						if (tetInControl.get(index).getLineOrientation()%2 == 1 && ((tetInControl.get(index).getBlockPlace(0)%10 == 0 && simRot[0]%10 >= 8)
-								|| (!grid[simRot[0]].getFill().equals(Color.WHITE) && !grid[simRot[0]].getFill().equals(Color.BLACK))
-								|| (!grid[simRot[1]].getFill().equals(Color.WHITE) && !grid[simRot[1]].getFill().equals(Color.BLACK))))
+						for (int i = 0; i < 4; i++)
 						{
-							for (int j = 0; j < 4; j++)
-									simRot[j] += 2;
+							if (tetInControl.get(index).getLineOrientation()%2 == 1 && ((tetInControl.get(index).getBlockPlace(i)%10 <= 1 && simRot[i]%10 >= 8)
+									|| (!grid[simRot[0]].getFill().equals(Color.WHITE) && !grid[simRot[0]].getFill().equals(Color.BLACK))
+									|| (!grid[simRot[1]].getFill().equals(Color.WHITE) && !grid[simRot[1]].getFill().equals(Color.BLACK))))
+							{
+								for (int j = 0; j < 4; j++)
+								{
+									if (tetInControl.get(index).getLineOrientation() == 1)
+										simRot[j] += 2;
+									else if (tetInControl.get(index).getLineOrientation() == 3)
+										simRot[j] += 1;
+								}
 							
-							kickedWallLeft = true;
+								kickedWallLeft = true;
+							}
 						}
 					
 						//checks if a right wall kick is needed by seeing if a block either:
@@ -844,14 +853,22 @@ public class TetrisGUI extends Application{
 						//(b) intersects a block right of the rotation point
 						//(c) isn't taking up the space of a block within the Tetrimino
 						//(d) didn't need assistance from a left wall kick
-						if (!kickedWallLeft && tetInControl.get(index).getLineOrientation()%2 == 1 && ((tetInControl.get(index).getBlockPlace(3)%10 == 9 && simRot[3]%10 <= 1)
-									|| (!grid[simRot[3]].getFill().equals(Color.WHITE) && !grid[simRot[3]].getFill().equals(Color.BLACK))
-									|| (!grid[simRot[2]].getFill().equals(Color.WHITE) && !grid[simRot[2]].getFill().equals(Color.BLACK))))
+						for (int i = 0; i < 4; i++)
 						{
-							for (int j = 0; j < 4; j++)
-								simRot[j] -= 2;
+							if (!kickedWallLeft && tetInControl.get(index).getLineOrientation()%2 == 1 && ((tetInControl.get(index).getBlockPlace(i)%10 >= 8 && simRot[i]%10 <= 1)
+										|| (!grid[simRot[3]].getFill().equals(Color.WHITE) && !grid[simRot[3]].getFill().equals(Color.BLACK))
+										|| (!grid[simRot[2]].getFill().equals(Color.WHITE) && !grid[simRot[2]].getFill().equals(Color.BLACK))))
+							{
+								for (int j = 0; j < 4; j++)
+								{
+									if (tetInControl.get(index).getLineOrientation() == 1)
+										simRot[j] -= 1;
+									else if (tetInControl.get(index).getLineOrientation() == 3)
+										simRot[j] -= 2;
+								}
 							
-							kickedWallRight = true;
+								kickedWallRight = true;
+							}
 						}
 					
 						//determines if the Tetrimino is able to rotate based on if the blocks are intersecting an already existing block
@@ -894,14 +911,22 @@ public class TetrisGUI extends Application{
 						//(a) clipped out of bounds
 						//(b) intersects a block left of the rotation point
 						//(c) isn't taking up the space of a block within the Tetrimino
-						if (tetInControl.get(index).getLineOrientation()%2 == 1 && ((tetInControl.get(index).getBlockPlace(0)%10 == 0 && simRot[0]%10 >= 8)
-								|| (!grid[simRot[0]].getFill().equals(Color.WHITE) && !grid[simRot[0]].getFill().equals(Color.BLACK))
-								|| (!grid[simRot[1]].getFill().equals(Color.WHITE) && !grid[simRot[1]].getFill().equals(Color.BLACK))))
+						for( int i = 0; i < 4; i++)
 						{
-							for (int j = 0; j < 4; j++)
-									simRot[j] += 2;
+							if (tetInControl.get(index).getLineOrientation()%2 == 1 && ((tetInControl.get(index).getBlockPlace(i)%10 <= 1 && simRot[i]%10 >= 8)
+									|| (!grid[simRot[0]].getFill().equals(Color.WHITE) && !grid[simRot[0]].getFill().equals(Color.BLACK))
+									|| (!grid[simRot[1]].getFill().equals(Color.WHITE) && !grid[simRot[1]].getFill().equals(Color.BLACK))))
+							{
+								for (int j = 0; j < 4; j++)
+								{
+									if (tetInControl.get(index).getLineOrientation() == 1)
+										simRot[j] += 2;
+									else if (tetInControl.get(index).getLineOrientation() == 3)
+										simRot[j] += 1;
+								}
 							
-							kickedWallLeft = true;
+								kickedWallLeft = true;
+							}
 						}
 					
 						//checks if a right wall kick is needed by seeing if a block either:
@@ -909,14 +934,22 @@ public class TetrisGUI extends Application{
 						//(b) intersects a block right of the rotation point
 						//(c) isn't taking up the space of a block within the Tetrimino
 						//(d) didn't need assistance from a left wall kick
-						if (!kickedWallLeft && tetInControl.get(index).getLineOrientation()%2 == 1 && ((tetInControl.get(index).getBlockPlace(3)%10 == 9 && simRot[3]%10 <= 1)
-								|| (!grid[simRot[3]].getFill().equals(Color.WHITE) && !grid[simRot[3]].getFill().equals(Color.BLACK))
-								|| (!grid[simRot[2]].getFill().equals(Color.WHITE) && !grid[simRot[2]].getFill().equals(Color.BLACK))))
+						for( int i = 0; i < 4; i++)
 						{
-							for (int j = 0; j < 4; j++)
-								simRot[j] -= 2;
-						
-							kickedWallRight = true;
+							if (!kickedWallLeft && tetInControl.get(index).getLineOrientation()%2 == 1 && ((tetInControl.get(index).getBlockPlace(i)%10 >= 8 && simRot[i]%10 <= 1)
+									|| (!grid[simRot[2]].getFill().equals(Color.WHITE) && !grid[simRot[2]].getFill().equals(Color.BLACK))
+									|| (!grid[simRot[3]].getFill().equals(Color.WHITE) && !grid[simRot[3]].getFill().equals(Color.BLACK))))
+							{
+								for (int j = 0; j < 4; j++)
+								{
+									if (tetInControl.get(index).getLineOrientation() == 1)
+										simRot[j] -= 1;
+									else if (tetInControl.get(index).getLineOrientation() == 3)
+										simRot[j] -= 2;
+								}
+							
+								kickedWallRight = true;
+							}
 						}
 					
 						//determines if the Tetrimino is able to rotate based on if the blocks are intersecting an already existing block
