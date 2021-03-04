@@ -21,7 +21,10 @@ import javafx.util.Duration;
  * This is the TetrisGUI class that has been completed
  * as of 4/20/2020
  * 
- * Program can be run either in this file or in Tetrimino.java
+ * Updated on 3/3/2021 to add "hold to quit" functionality and
+ * implement correct version of Tetris's next-blocks algorithm
+ * 
+ * Program can be run either in this file or in Tetromino.java
  * 
  * @author Matthew Gallagher & Matthew Fairneny
  *
@@ -29,43 +32,107 @@ import javafx.util.Duration;
 public class TetrisGUI extends Application{
 
 	Timeline a;
+	Timeline quit;
+	boolean didQuit = false;
+	int timeLeftForQuit = 2;
+	boolean isPaused = false;
 	int speedInMilli = 1000;	//speed of blocks falling in milliseconds
 	double totalSpeed = 1.0;
 	double speedMult = 0;
 	boolean speedUp = false;
-	boolean gameOver = false;
+	boolean gameOver = false;;
 	boolean alreadyHeld = false;
-	int sceneWidth = 500;	//holds the width of the scene and grid[]
-	int sceneHeight = 1000;	//holds the height of the scene and grid[]
-	int numGrid = ((sceneWidth/50)*(sceneHeight/50));	//number of grid spaces
-	double currX = 0.0;	//current X value used to construct grid[]
-	double currY = 0.0;	//current Y value used to construct grid[]
-	int rotWidth = 0;	//holds the rotation width of a Tetrimino object
-	int randomBlockType = 0;	//creates the block type of a Tetrimino object
-
-	public static void main(String[] args)
-	{
-		launch(args);
-	}	
+	final int sceneWidth = 500;	//holds the width of the scene and grid[]
+	final int sceneHeight = 1000;	//holds the height of the scene and grid[]
+	final int numGrid = ((sceneWidth/50)*(sceneHeight/50));	//number of grid spaces
+	double currX;	//current X value used to construct grid[]
+	double currY;	//current Y value used to construct grid[]
+	int rotWidth = 0;	//holds the rotation width of a Tetromino object
+	int randomBlockType = 0;	//creates the block type of a Tetromino object
+	//Below: Variables made for scene creation
+	Rectangle[] grid;
+	ArrayList<Tetromino> tetInControl;
+	Pane p;
+	Text gameStatus;
+	Text controls;
+	Text holding;
+	Rectangle containHolding;
+	Text upNext;
+	Rectangle containNext;
+	Rectangle[] tetHeld;
+	Rectangle[] tetComing;
+	Stage mainStage;
+	//Below: Variables for Tetromino and game logic
+	int holdingType;
+	Tetromino tetHolding;
+	int temp;
+	int index;	//index of tetInControl
+	Color currTetrominoColor;	//color of the current Tetromino
+	ArrayList<Integer> bottomBlocks;	//Array List that stores the blocks at the bottom of the Tetromino
+	ArrayList<Integer> leftBlocks;	//Array List that stores the blocks at the left-most side of the Tetromino
+	ArrayList<Integer> rightBlocks;	//Array List that stores the block at the right-most side of the Tetromino
+	boolean blocksAreAboveNothing;	//holds the number of blocks that from bottomBlocks that have no blocks immediately underneth them
+	int newRandomBlockType;	//creates the new Tetromino type for the new Tetromino
+	boolean cantMoveLeft;	//boolean status for if the tetrimino can move left
+	boolean cantMoveRight;	//boolean status for if the tetrimino can move right
+	int[] simRot;
+	int condition;
+	boolean kickedWallRight;
+	boolean kickedWallLeft;
+	boolean kickedFloor;
+	Tetromino[] nextTets;
+	Tetromino[] tetBag;
+	int tetsLeft = 7;
+	boolean tetGrabbed = false;
 
 	@Override
 	public void start(Stage primaryStage)
 	{
-		Rectangle[] grid = new Rectangle[numGrid];	//Rectangle array that creates the grid that shows the Tetrimino objects and allows the user to play
+		currX = 0.0;
+		currY = 0.0;
+		gameOver = false;
+		mainStage = primaryStage;
+		grid = new Rectangle[numGrid];	//Rectangle array that creates the grid that shows the Tetromino objects and allows the user to play
 		for (int c = 0; c < grid.length; c++)	//for-loop that initializes the Rectangles in grid[]
 		{
 			grid[c] = new Rectangle(50, 50);
 		}
 
-		ArrayList<Tetrimino> tetInControl = new ArrayList<Tetrimino>();	//ArrayList that holds Tetrimino objects
-		for (int a = 0; a < 4; a++)	//for-loop that creates the first 4 Tetrimino objects within tetInControl
+		tetBag = new Tetromino[]{new Tetromino(0), new Tetromino(1), new Tetromino(2), new Tetromino(3), new Tetromino(4), new Tetromino(5), new Tetromino(6)};
+		tetInControl = new ArrayList<Tetromino>();	//ArrayList that holds Tetromino objects
+		while (tetsLeft > 0)	//for-loop that creates the first 7 Tetromino objects within tetInControl
 		{
 			randomBlockType = (int) (Math.random()*7);	//uses Math.random() to store a value from 0-6 to randomBlockType
-
-			tetInControl.add(new Tetrimino(randomBlockType));	//initializes a new tetrimino into index i of tetInControl
+			if (tetBag[randomBlockType] != null) {
+				tetInControl.add(new Tetromino(randomBlockType));	//initializes a new tetrimino into index i of tetInControl
+				tetsLeft--;
+				tetBag[randomBlockType] = null;
+			}
 		}
-
-		Pane p = new Pane();
+		
+		tetsLeft = 7;
+		for (int redo = 0; redo < 7; redo++) {
+			tetBag[redo] = new Tetromino(redo);
+		}
+		
+		holdingType = -1;
+		tetHolding = new Tetromino(-1);
+		temp = -1;
+		index = 0;
+		currTetrominoColor = tetInControl.get(0).getColor();
+		bottomBlocks = tetInControl.get(0).bottomBlocks();
+		leftBlocks = tetInControl.get(0).sideBlocksLeft();
+		rightBlocks = tetInControl.get(0).sideBlocksRight();
+		blocksAreAboveNothing = true;
+		cantMoveLeft = false;
+		cantMoveRight = false;
+		simRot = new int[4];
+		condition = -1;
+		kickedWallRight = false;
+		kickedWallLeft = false;
+		kickedFloor = false;
+		
+		p = new Pane();
 		for (int i = 0; i < grid.length; i++)	//for-loop that places the Rectangle in grid[] within the scene
 		{
 			grid[i].setX(currX);
@@ -82,24 +149,32 @@ public class TetrisGUI extends Application{
 				currX+=50.0;
 		}
 		
-		Text gameStatus = new Text(175, 330, String.format(""));
+		gameStatus = new Text(175, 330, String.format(""));
 		gameStatus.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 20));
-		Text controls = new Text(525, 770, String.format("LEFT ARROW - Move Left%n%nRIGHT ARROW - Move Right%n%nUP ARROW - Rotate Right%n%nDOWN ARROW - Rotate Left%n%nSPACE - Hard Drop%n%nZ - Soft Drop%n%nH - Hold Block (once per turn)"));
+		controls = new Text(525, 800, String.format("LEFT ARROW - Move Left"
+				+ "%nRIGHT ARROW - Move Right"
+				+ "%nUP ARROW - Rotate Right"
+				+ "%nDOWN ARROW - Rotate Left"
+				+ "%nSPACE - Hard Drop"
+				+ "%nZ - Soft Drop"
+				+ "%nH - Hold Block (once per turn)"
+				+ "%nP - Pause"
+				+ "%nHold ESC for 3 seconds to quit"));
 		controls.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 15));
-		Text holding = new Text(525, 20, String.format("Currently Holding"));
+		holding = new Text(525, 30, String.format("Currently Holding"));
 		holding.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 15));
-		Rectangle containHolding = new Rectangle(200, 200);
+		containHolding = new Rectangle(200, 200);
 		containHolding.setFill(Color.WHITE);
 		containHolding.setStroke(Color.BLACK);
 		containHolding.setX(525);
-		containHolding.setY(30);
-		Text upNext = new Text(525, 250, String.format("Next 3 Blocks"));
+		containHolding.setY(35);
+		upNext = new Text(525, 260, String.format("Next 3 Blocks"));
 		upNext.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 15));
-		Rectangle containNext = new Rectangle(200, 480);
+		containNext = new Rectangle(200, 480);
 		containNext.setFill(Color.WHITE);
 		containNext.setStroke(Color.BLACK);
 		containNext.setX(525);
-		containNext.setY(260);
+		containNext.setY(270);
 		p.getChildren().add(gameStatus);
 		p.getChildren().add(controls);
 		p.getChildren().add(holding);
@@ -107,7 +182,7 @@ public class TetrisGUI extends Application{
 		p.getChildren().add(upNext);
 		p.getChildren().add(containNext);
 		
-		Rectangle[] tetHeld = new Rectangle[4];
+		tetHeld = new Rectangle[4];
 		for (int i = 0; i < 4; i++)
 		{
 			tetHeld[i] = new Rectangle(40, 40);
@@ -117,7 +192,7 @@ public class TetrisGUI extends Application{
 			p.getChildren().add(tetHeld[i]);
 		}
 		
-		Rectangle[] tetComing = new Rectangle[12];
+		tetComing = new Rectangle[12];
 		for (int i = 0; i < 4; i++)
 		{
 			tetComing[i] = new Rectangle(40, 40);
@@ -146,44 +221,39 @@ public class TetrisGUI extends Application{
 			p.getChildren().add(tetComing[i]);
 		}
 
-		for (int k = 0; k < 4; k++)	//adds the blocks from currentBlocks into the grid[] by filling the indexes with the Tetrimino's color
+		for (int k = 0; k < 4; k++)	//adds the blocks from currentBlocks into the grid[] by filling the indexes with the Tetromino's color
 		{
 			grid[tetInControl.get(0).getBlockPlace(k)].setFill(tetInControl.get(0).getColor());
 		}
 
 		//creates the scene
-		Scene scene = new Scene(p, sceneWidth + 300, sceneHeight);
-		primaryStage.setTitle("Tetris");
-		primaryStage.setScene(scene);
-		primaryStage.show();
+		mainStage.setTitle("Tetris");
+		mainStage.setScene(new Scene(p, sceneWidth + 300, sceneHeight));
+		mainStage.show();
 
-		//EventHandler that is called every second to process the movement of Tetrimino's and when a new one is added into the scene
+		//EventHandler that is called every second while the player is holding the ESCAPE key
+		EventHandler<ActionEvent> quiting = new EventHandler<ActionEvent>() {
+			
+			@Override
+			public void handle(ActionEvent time) {
+				if (timeLeftForQuit > 0) {
+					timeLeftForQuit--;
+				} else {
+					mainStage.close();
+					System.exit(0);
+				}
+			}
+		};
+		
+		//EventHandler that is called every second to process the movement of Tetromino's and when a new one is added into the scene
 		EventHandler<ActionEvent> time = new EventHandler<ActionEvent>()
 		{
-			int holding = -1;
-			Tetrimino tetHolding = new Tetrimino(-1);
-			int temp = -1;
-			int index = 0;	//index of tetInControl
-			Color currTetriminoColor = tetInControl.get(0).getColor();	//color of the current Tetrimino
-			ArrayList<Integer> bottomBlocks = tetInControl.get(0).bottomBlocks();	//Array List that stores the blocks at the bottom of the Tetrimino
-			ArrayList<Integer> leftBlocks = tetInControl.get(0).sideBlocksLeft();	//Array List that stores the blocks at the left-most side of the Tetrimino
-			ArrayList<Integer> rightBlocks = tetInControl.get(0).sideBlocksRight();	//Array List that stores the block at the right-most side of the Tetrimino
-			boolean blocksAreAboveNothing = true;	//holds the number of blocks that from bottomBlocks that have no blocks immediately underneth them
-			int newRandomBlockType;	//creates the new Tetrimino type for the new Tetrimino
-			boolean cantMoveLeft = false;	//boolean status for if the tetrimino can move left
-			boolean cantMoveRight = false;	//boolean status for if the tetrimino can move right
-			int[] simRot = new int[4];
-			int condition = -1;
-			boolean kickedWallRight = false;
-			boolean kickedWallLeft = false;
-			boolean kickedFloor = false;
-
 			@Override
 			public void handle(ActionEvent time)
 			{
 				if (gameOver)
 				{
-					totalSpeed = 0;
+					a.pause();
 					grid[63].setFill(Color.WHITE);
 					grid[64].setFill(Color.WHITE);
 					grid[65].setFill(Color.WHITE);
@@ -192,7 +262,15 @@ public class TetrisGUI extends Application{
 					grid[64].setStroke(Color.WHITE);
 					grid[65].setStroke(Color.WHITE);
 					grid[66].setStroke(Color.WHITE);
-					gameStatus.setText(String.format("GAME OVER"));
+					grid[73].setFill(Color.WHITE);
+					grid[74].setFill(Color.WHITE);
+					grid[75].setFill(Color.WHITE);
+					grid[76].setFill(Color.WHITE);
+					grid[73].setStroke(Color.WHITE);
+					grid[74].setStroke(Color.WHITE);
+					grid[75].setStroke(Color.WHITE);
+					grid[76].setStroke(Color.WHITE);
+					gameStatus.setText(String.format(" GAME OVER%nPLAY AGAIN?%n      (y/n)"));
 				}
 				else
 				{
@@ -200,7 +278,7 @@ public class TetrisGUI extends Application{
 						totalSpeed = 1.0 + speedMult*.1;
 						a.setRate(totalSpeed);
 					}
-					if (index > 54)	//if statement that will remove old Tetrimino objects from tetInControl
+					if (index > 54)	//if statement that will remove old Tetromino objects that are no longer useful from tetInControl
 					{
 						tetInControl.remove(0);
 						index--;
@@ -219,13 +297,13 @@ public class TetrisGUI extends Application{
 							blocksAreAboveNothing = false;
 					}
 
-					if (blocksAreAboveNothing)	//if statement that drops the blocks of Tetrimino into the next blocks below based on the value of blocksAboveNothing
+					if (blocksAreAboveNothing)	//if statement that drops the blocks of Tetromino into the next blocks below based on the value of blocksAboveNothing
 					{
-						for (int j = 3; j > -1; j--)	//for-loop that updates the indexes of the blocks in the current Tetrimino
+						for (int j = 3; j > -1; j--)	//for-loop that updates the indexes of the blocks in the current Tetromino
 						{
 							grid[tetInControl.get(index).getBlockPlace(j)].setFill(Color.WHITE);	//makes the old index white
 							tetInControl.get(index).changeBlock(j, 10);
-							grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);	//makes the new index the color of the Tetrimino
+							grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetrominoColor);	//makes the new index the color of the Tetromino
 						}
 						bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks
 						leftBlocks = tetInControl.get(index).sideBlocksLeft();	//updates leftBlocks
@@ -234,18 +312,18 @@ public class TetrisGUI extends Application{
 						cantMoveLeft = false;	//updates cantMoveLeft
 						cantMoveRight = false;	//updates cantMoveRight	
 					}
-					else	//else statement that activates if the Tetrimino is at the bottom of the screen or is immediately above another block
+					else	//else statement that activates if the Tetromino is at the bottom of the screen or is immediately above another block
 					{
 						clearLines();
-						index++;	//increases index to the next Tetrimino
-						bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks to the bottomBlocks of the next Tetrimino
-						leftBlocks = tetInControl.get(index).sideBlocksLeft();	//updates leftBlockss to the sideBlocksLeft of the next Tetrimino
-						rightBlocks = tetInControl.get(index).sideBlocksRight();	//updates rightBlockss to the sideBlocksRight of the next Tetrimino
-						currTetriminoColor = tetInControl.get(index).getColor();	//updates the color of the indexes to that of the next Tetrimino
+						index++;	//increases index to the next Tetromino
+						bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks to the bottomBlocks of the next Tetromino
+						leftBlocks = tetInControl.get(index).sideBlocksLeft();	//updates leftBlockss to the sideBlocksLeft of the next Tetromino
+						rightBlocks = tetInControl.get(index).sideBlocksRight();	//updates rightBlockss to the sideBlocksRight of the next Tetromino
+						currTetrominoColor = tetInControl.get(index).getColor();	//updates the color of the indexes to that of the next Tetromino
 						cantMoveLeft = false;	//updates cantMoveLeft
 						cantMoveRight = false;	//updates cantMoveRight
 						alreadyHeld = false;
-						for (int b = 0; b < 4; b++)	//for-loop that creates the next Tetrimino on grid[]
+						for (int b = 0; b < 4; b++)	//for-loop that creates the next Tetromino on grid[] and checks for game over conditions
 						{
 							if (!grid[tetInControl.get(index).getBlockPlace(b)].getFill().equals(Color.WHITE))
 							{
@@ -253,13 +331,37 @@ public class TetrisGUI extends Application{
 								b = 5;
 							}
 							else
-								grid[tetInControl.get(index).getBlockPlace(b)].setFill(currTetriminoColor);
+								grid[tetInControl.get(index).getBlockPlace(b)].setFill(currTetrominoColor);
 						}
 						blocksAreAboveNothing = true;
 						
-						//creates a new Tetrimino and adds it to tetInControl
+						/*
+						//creates a new Tetromino and adds it to tetInControl
 						newRandomBlockType = (int) (Math.random()*7);
-						tetInControl.add(new Tetrimino(newRandomBlockType));
+						tetInControl.add(new Tetromino(newRandomBlockType));
+						updateTetComing();
+						*/
+						
+						if (tetsLeft == 0) {
+							while (tetsLeft < 7) {
+								newRandomBlockType = (int) (Math.random()*7);
+								if (tetBag[newRandomBlockType] == null) {
+									tetBag[newRandomBlockType] = new Tetromino(newRandomBlockType);
+									tetsLeft++;
+								}
+							}
+						}
+						
+						while (true) {
+							newRandomBlockType = (int) (Math.random()*7);
+							if (tetBag[newRandomBlockType] != null) {
+								tetInControl.add(new Tetromino(newRandomBlockType));
+								tetsLeft--;
+								tetBag[newRandomBlockType] = null;
+								break;
+							}
+						}
+						
 						updateTetComing();
 					}
 				}
@@ -273,6 +375,11 @@ public class TetrisGUI extends Application{
                                 a.setRate(totalSpeed * 1.0);
                         }
 						
+						if (event.getCode() == KeyCode.ESCAPE) {
+							quit.pause();
+							timeLeftForQuit = 2;
+						}
+						
 					}
 				});
 
@@ -281,55 +388,85 @@ public class TetrisGUI extends Application{
 					public void handle(KeyEvent event)
 					{
 						
+						if (event.getCode() == KeyCode.P && !gameOver && !isPaused)
+						{
+							isPaused = true;
+							gameStatus.setText("PAUSED");
+							a.pause();
+						}
+						else if (event.getCode() == KeyCode.P && !gameOver && isPaused)
+						{
+							isPaused = false;
+							gameStatus.setText("");
+							a.play();
+						}
+						
+						if (event.getCode() == KeyCode.ESCAPE) {
+							quit.play();
+						}
+						
+						if (event.getCode() == KeyCode.Y && gameOver)
+						{
+							Stage newStage = new Stage();
+							mainStage.close();
+							start(newStage);
+						}
+						
+						if (event.getCode() == KeyCode.N && gameOver)
+						{
+							mainStage.close();
+							System.exit(0);
+						}
+						
 						if (event.getCode() == KeyCode.H && !alreadyHeld && !gameOver)
 						{
-							if (holding == -1)
+							if (holdingType == -1)
 							{
-								holding = tetInControl.get(index).getType();
-								tetHolding = new Tetrimino(holding);
+								holdingType = tetInControl.get(index).getType();
+								tetHolding = new Tetromino(holdingType);
 								for (int i = 0; i < 4; i++)
 								{
 									grid[tetInControl.get(index).getBlockPlace(i)].setFill(Color.WHITE);
-									tetHeld[i].setFill(currTetriminoColor);
+									tetHeld[i].setFill(currTetrominoColor);
 								}
 								index++;
 								bottomBlocks = tetInControl.get(index).bottomBlocks();
 								leftBlocks = tetInControl.get(index).sideBlocksLeft();
 								rightBlocks = tetInControl.get(index).sideBlocksRight();
-								currTetriminoColor = tetInControl.get(index).getColor();
+								currTetrominoColor = tetInControl.get(index).getColor();
 								cantMoveLeft = false;
 								cantMoveRight = false;
 								blocksAreAboveNothing = true;
 								for (int b = 0; b < 4; b++)
 								{
-									grid[tetInControl.get(index).getBlockPlace(b)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(b)].setFill(currTetrominoColor);
 								}
 
 								newRandomBlockType = (int) (Math.random()*7);
-								tetInControl.add(new Tetrimino(newRandomBlockType));
+								tetInControl.add(new Tetromino(newRandomBlockType));
 								updateTetComing();
 							}
 							else
 							{
-								temp = holding;
-								holding = tetInControl.get(index).getType();
-								tetHolding = new Tetrimino(holding);
+								temp = holdingType;
+								holdingType = tetInControl.get(index).getType();
+								tetHolding = new Tetromino(holdingType);
 								for (int i = 0; i < 4; i++)
 								{
 									grid[tetInControl.get(index).getBlockPlace(i)].setFill(Color.WHITE);
-									tetHeld[i].setFill(currTetriminoColor);
+									tetHeld[i].setFill(currTetrominoColor);
 								}
-								tetInControl.set(index, new Tetrimino(temp));
+								tetInControl.set(index, new Tetromino(temp));
 								bottomBlocks = tetInControl.get(index).bottomBlocks();
 								leftBlocks = tetInControl.get(index).sideBlocksLeft();
 								rightBlocks = tetInControl.get(index).sideBlocksRight();
-								currTetriminoColor = tetInControl.get(index).getColor();
+								currTetrominoColor = tetInControl.get(index).getColor();
 								cantMoveLeft = false;
 								cantMoveRight = false;
 								blocksAreAboveNothing = true;
 								for (int b = 0; b < 4; b++)
 								{
-									grid[tetInControl.get(index).getBlockPlace(b)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(b)].setFill(currTetrominoColor);
 								}
 							}
 							
@@ -352,7 +489,7 @@ public class TetrisGUI extends Application{
 							hardDrop();
 						}
 						
-						if (event.getCode() == KeyCode.UP && !gameOver) // rotate Tetrimino clockwise	
+						if (event.getCode() == KeyCode.UP && !gameOver) // rotate Tetromino clockwise	
 						{
 							if (tetInControl.get(index).getType() > 1 && canRotate(true)) {
 								
@@ -373,12 +510,12 @@ public class TetrisGUI extends Application{
 									condition = 2;
 								}
 								
-								tetInControl.get(index).rotateRight(condition);	//rotates the Tetrimino right
+								tetInControl.get(index).rotateRight(condition);	//rotates the Tetromino right
 								
 								
-								for (int j = 0; j < 4; j++)	//shows the Tetrimino in grid[]
+								for (int j = 0; j < 4; j++)	//shows the Tetromino in grid[]
 								{
-									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetrominoColor);
 								}
 								
 								bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks
@@ -404,12 +541,12 @@ public class TetrisGUI extends Application{
 									condition = 2;
 								}
 								
-								tetInControl.get(index).rotateLineRight(condition);	//rotates the Tetrimino right
+								tetInControl.get(index).rotateLineRight(condition);	//rotates the Tetromino right
 								
 								
-								for (int j = 0; j < 4; j++)	//shows the Tetrimino in grid[]
+								for (int j = 0; j < 4; j++)	//shows the Tetromino in grid[]
 								{
-									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetrominoColor);
 								}
 								
 								bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks
@@ -439,11 +576,11 @@ public class TetrisGUI extends Application{
 									condition = 2;
 								}
 								
-								tetInControl.get(index).rotateLeft(condition);	//rotates the Tetrimino left
+								tetInControl.get(index).rotateLeft(condition);	//rotates the Tetromino left
 								
-								for (int j = 0; j < 4; j++) //shows the Tetrimino in grid[]
+								for (int j = 0; j < 4; j++) //shows the Tetromino in grid[]
 								{
-									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetrominoColor);
 								}
 								
 								bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks
@@ -469,11 +606,11 @@ public class TetrisGUI extends Application{
 									condition = 2;
 								}
 								
-								tetInControl.get(index).rotateLineLeft(condition);	//rotates the Tetrimino left
+								tetInControl.get(index).rotateLineLeft(condition);	//rotates the Tetromino left
 								
-								for (int j = 0; j < 4; j++) //shows the Tetrimino in grid[]
+								for (int j = 0; j < 4; j++) //shows the Tetromino in grid[]
 								{
-									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetrominoColor);
 								}
 								
 								bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks
@@ -482,9 +619,9 @@ public class TetrisGUI extends Application{
 							}
 						}
 						
-						if (event.getCode() == KeyCode.LEFT && !gameOver)	//if statement for when the user wants to move the Tetrimino left
+						if (event.getCode() == KeyCode.LEFT && !gameOver)	//if statement for when the user wants to move the Tetromino left
 						{
-							for (int i = 0; i < leftBlocks.size(); i++)	//for loop that sees if the Tetrimino can move left
+							for (int i = 0; i < leftBlocks.size(); i++)	//for loop that sees if the Tetromino can move left
 							{
 								try {
 									if (!grid[leftBlocks.get(i) - 1].getFill().equals(Color.WHITE) || leftBlocks.get(i)%10 == 0)
@@ -493,13 +630,13 @@ public class TetrisGUI extends Application{
 									cantMoveLeft = true;
 								}
 							}
-							if (!cantMoveLeft)	//if statement for when the Tetrimino can move left
+							if (!cantMoveLeft)	//if statement for when the Tetromino can move left
 							{
-								for (int d = 0; d < 4; d++)	//for loop that changes the index values within the Tetrimino object aand updates the grid
+								for (int d = 0; d < 4; d++)	//for loop that changes the index values within the Tetromino object aand updates the grid
 								{
 									grid[tetInControl.get(index).getBlockPlace(d)].setFill(Color.WHITE);
 									tetInControl.get(index).changeBlock(d, -1);
-									grid[tetInControl.get(index).getBlockPlace(d)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(d)].setFill(currTetrominoColor);
 								}
 								bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks
 								leftBlocks = tetInControl.get(index).sideBlocksLeft();	//updates leftBlocks
@@ -507,9 +644,9 @@ public class TetrisGUI extends Application{
 							}
 						}
 
-						if (event.getCode() == KeyCode.RIGHT && !gameOver)	//if statement for when the user wants to move the Tetrimino right
+						if (event.getCode() == KeyCode.RIGHT && !gameOver)	//if statement for when the user wants to move the Tetromino right
 						{
-							for (int i = 0; i < rightBlocks.size(); i++)	//for loop that sees if the Tetrimino can move right
+							for (int i = 0; i < rightBlocks.size(); i++)	//for loop that sees if the Tetromino can move right
 							{
 								try {
 									if (!grid[rightBlocks.get(i) + 1].getFill().equals(Color.WHITE) || rightBlocks.get(i)%10 == 9)
@@ -518,13 +655,13 @@ public class TetrisGUI extends Application{
 									cantMoveRight = true;
 								}
 							}
-							if (!cantMoveRight)	//if statement for when the Tetrimino can move right
+							if (!cantMoveRight)	//if statement for when the Tetromino can move right
 							{
-								for (int d = 3; d > -1; d--)	//for loop that changes the index values for the Tetrimino object and updates the grid
+								for (int d = 3; d > -1; d--)	//for loop that changes the index values for the Tetromino object and updates the grid
 								{
 									grid[tetInControl.get(index).getBlockPlace(d)].setFill(Color.WHITE);
 									tetInControl.get(index).changeBlock(d, 1);
-									grid[tetInControl.get(index).getBlockPlace(d)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(d)].setFill(currTetrominoColor);
 								}
 								bottomBlocks = tetInControl.get(index).bottomBlocks();
 								leftBlocks = tetInControl.get(index).sideBlocksLeft();
@@ -562,7 +699,7 @@ public class TetrisGUI extends Application{
 						{
 							grid[tetInControl.get(index).getBlockPlace(k)].setFill(Color.WHITE);
 							tetInControl.get(index).changeBlock(k, 10);
-							grid[tetInControl.get(index).getBlockPlace(k)].setFill(currTetriminoColor);
+							grid[tetInControl.get(index).getBlockPlace(k)].setFill(currTetrominoColor);
 						}
 						for (int j = 0; j < bottomBlocks.size(); j++) {
 							bottomBlocks.set(j, bottomBlocks.get(j) + 10);
@@ -570,15 +707,15 @@ public class TetrisGUI extends Application{
 					}
 				}
 				clearLines();
-				index++;	//increases index to the next Tetrimino
-				bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks to the bottomBlocks of the next Tetrimino
-				leftBlocks = tetInControl.get(index).sideBlocksLeft();	//updates leftBlockss to the sideBlocksLeft of the next Tetrimino
-				rightBlocks = tetInControl.get(index).sideBlocksRight();	//updates rightBlockss to the sideBlocksRight of the next Tetrimino
-				currTetriminoColor = tetInControl.get(index).getColor();	//updates the color of the indexes to that of the next Tetrimino
+				index++;	//increases index to the next Tetromino
+				bottomBlocks = tetInControl.get(index).bottomBlocks();	//updates bottomBlocks to the bottomBlocks of the next Tetromino
+				leftBlocks = tetInControl.get(index).sideBlocksLeft();	//updates leftBlockss to the sideBlocksLeft of the next Tetromino
+				rightBlocks = tetInControl.get(index).sideBlocksRight();	//updates rightBlockss to the sideBlocksRight of the next Tetromino
+				currTetrominoColor = tetInControl.get(index).getColor();	//updates the color of the indexes to that of the next Tetromino
 				cantMoveLeft = false;	//updates cantMoveLeft
 				cantMoveRight = false;	//updates cantMoveRight
 				alreadyHeld = false;
-				for (int b = 0; b < 4; b++)	//for-loop that creates the next Tetrimino on grid[]
+				for (int b = 0; b < 4; b++)	//for-loop that creates the next Tetromino on grid[]
 				{
 					if (!grid[tetInControl.get(index).getBlockPlace(b)].getFill().equals(Color.WHITE))
 					{
@@ -586,13 +723,30 @@ public class TetrisGUI extends Application{
 						b = 5;
 					}
 					else
-						grid[tetInControl.get(index).getBlockPlace(b)].setFill(currTetriminoColor);
+						grid[tetInControl.get(index).getBlockPlace(b)].setFill(currTetrominoColor);
 				}
 				blocksAreAboveNothing = true;
 
-				//creates a new Tetrimino and adds it to tetInControl
-				newRandomBlockType = (int) (Math.random()*7);
-				tetInControl.add(new Tetrimino(newRandomBlockType));
+				if (tetsLeft == 0) {
+					while (tetsLeft < 7) {
+						newRandomBlockType = (int) (Math.random()*7);
+						if (tetBag[newRandomBlockType] == null) {
+							tetBag[newRandomBlockType] = new Tetromino(newRandomBlockType);
+							tetsLeft++;
+						}
+					}
+				}
+				
+				while (true) {
+					newRandomBlockType = (int) (Math.random()*7);
+					if (tetBag[newRandomBlockType] != null) {
+						tetInControl.add(new Tetromino(newRandomBlockType));
+						tetsLeft--;
+						tetBag[newRandomBlockType] = null;
+						break;
+					}
+				}
+				
 				updateTetComing();
 			}
 			
@@ -641,12 +795,12 @@ public class TetrisGUI extends Application{
 			}
 			
 				
-			/**Method that will be called when the user tries to rotate the Tetrimino.
+			/**Method that will be called when the user tries to rotate the Tetromino.
 			 * It will be given a true value if the user is rotating right/clockwise
 			 * or false if the user is rotating left/counter-clockwise
 			 * 
 			 * @param rOrL
-			 * @return
+			 * @return true if the Tetromino can be rotated, false if it cannot be rotated
 			 */
 			public boolean canRotate(boolean rOrL)
 			{
@@ -661,7 +815,7 @@ public class TetrisGUI extends Application{
 					{
 						simRot = tetInControl.get(index).simRotateRight();
 					
-						for (int k = 0; k < 4; k++)	//turns the Tetrimino black to avoid errors in rotating
+						for (int k = 0; k < 4; k++)	//turns the Tetromino black to avoid errors in rotating
 						{
 							grid[tetInControl.get(index).getBlockPlace(k)].setFill(Color.BLACK);
 						}
@@ -681,7 +835,7 @@ public class TetrisGUI extends Application{
 						//checks if a left wall kick is needed by seeing if a block either:
 						//(a) clipped out of bounds
 						//(b) intersects a block left of the rotation point
-						//(c) isn't taking up the space of a block within the Tetrimino
+						//(c) isn't taking up the space of a block within the Tetromino
 						for (int i = 0; i < 4; i++)
 						{
 							if ((simRot[i]%10 == 9 && tetInControl.get(index).getBlockPlace(i)%10 <= 1)
@@ -700,7 +854,7 @@ public class TetrisGUI extends Application{
 						//checks if a right wall kick is needed by seeing if a block either:
 						//(a) clipped out of bounds
 						//(b) intersects a block right of the rotation point
-						//(c) isn't taking up the space of a block within the Tetrimino
+						//(c) isn't taking up the space of a block within the Tetromino
 						//(d) didn't need assistance from a left wall kick
 						for (int k = 0; k < 4; k++)
 						{
@@ -716,14 +870,14 @@ public class TetrisGUI extends Application{
 							}
 						}
 					
-						//determines if the Tetrimino is able to rotate based on if the blocks are intersecting an already existing block
+						//determines if the Tetromino is able to rotate based on if the blocks are intersecting an already existing block
 						for (int d = 0; d < 4; d++)
 						{
 							if (!grid[simRot[d]].getFill().equals(Color.WHITE) && !grid[simRot[d]].getFill().equals(Color.BLACK))
 							{
 								for (int j = 0; j < 4; j++)
 								{
-									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetrominoColor);
 								}
 								return false;
 							}
@@ -753,7 +907,7 @@ public class TetrisGUI extends Application{
 						//checks if a left wall kick is needed by seeing if a block either:
 						//(a) clipped out of bounds
 						//(b) intersects a block left of the rotation point
-						//(c) isn't taking up the space of a block within the Tetrimino
+						//(c) isn't taking up the space of a block within the Tetromino
 						for (int i = 0; i < 4; i++)
 						{
 							if ((simRot[i]%10 == 9 && tetInControl.get(index).getBlockPlace(i)%10 <= 1)
@@ -771,7 +925,7 @@ public class TetrisGUI extends Application{
 						//checks if a right wall kick is needed by seeing if a block either:
 						//(a) clipped out of bounds
 						//(b) intersects a block right of the rotation point
-						//(c) isn't taking up the space of a block within the Tetrimino
+						//(c) isn't taking up the space of a block within the Tetromino
 						//(d) didn't need assistance from a left wall kick
 						for (int k = 0; k < 4; k++)
 						{
@@ -787,14 +941,14 @@ public class TetrisGUI extends Application{
 							}
 						}
 					
-						//determines if the Tetrimino is able to rotate based on if the blocks are intersecting an already existing block
+						//determines if the Tetromino is able to rotate based on if the blocks are intersecting an already existing block
 						for (int d = 0; d < 4; d++)
 						{
 							if (!grid[simRot[d]].getFill().equals(Color.WHITE) && !grid[simRot[d]].getFill().equals(Color.BLACK))
 							{
 								for (int j = 0; j < 4; j++)
 								{
-									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetrominoColor);
 								}
 								return false;
 							}
@@ -807,7 +961,7 @@ public class TetrisGUI extends Application{
 					{
 						simRot = tetInControl.get(index).simRotateLineRight();
 						
-						for (int k = 0; k < 4; k++)	//turns the Tetrimino black to avoid errors in rotating
+						for (int k = 0; k < 4; k++)	//turns the Tetromino black to avoid errors in rotating
 						{
 							grid[tetInControl.get(index).getBlockPlace(k)].setFill(Color.BLACK);
 							if (simRot[k] < 0)
@@ -829,7 +983,7 @@ public class TetrisGUI extends Application{
 						//checks if a left wall kick is needed by seeing if a block either:
 						//(a) clipped out of bounds
 						//(b) intersects a block left of the rotation point
-						//(c) isn't taking up the space of a block within the Tetrimino
+						//(c) isn't taking up the space of a block within the Tetromino
 						for (int i = 0; i < 4; i++)
 						{
 							if (tetInControl.get(index).getLineOrientation()%2 == 1 && ((tetInControl.get(index).getBlockPlace(i)%10 <= 1 && simRot[i]%10 >= 8)
@@ -851,7 +1005,7 @@ public class TetrisGUI extends Application{
 						//checks if a right wall kick is needed by seeing if a block either:
 						//(a) clipped out of bounds
 						//(b) intersects a block right of the rotation point
-						//(c) isn't taking up the space of a block within the Tetrimino
+						//(c) isn't taking up the space of a block within the Tetromino
 						//(d) didn't need assistance from a left wall kick
 						for (int i = 0; i < 4; i++)
 						{
@@ -871,14 +1025,14 @@ public class TetrisGUI extends Application{
 							}
 						}
 					
-						//determines if the Tetrimino is able to rotate based on if the blocks are intersecting an already existing block
+						//determines if the Tetromino is able to rotate based on if the blocks are intersecting an already existing block
 						for (int d = 0; d < 4; d++)
 						{
 							if (!grid[simRot[d]].getFill().equals(Color.WHITE) && !grid[simRot[d]].getFill().equals(Color.BLACK))
 							{
 								for (int j = 0; j < 4; j++)
 								{
-									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetrominoColor);
 								}
 								return false;
 							}
@@ -910,7 +1064,7 @@ public class TetrisGUI extends Application{
 						//checks if a left wall kick is needed by seeing if a block either:
 						//(a) clipped out of bounds
 						//(b) intersects a block left of the rotation point
-						//(c) isn't taking up the space of a block within the Tetrimino
+						//(c) isn't taking up the space of a block within the Tetromino
 						for( int i = 0; i < 4; i++)
 						{
 							if (tetInControl.get(index).getLineOrientation()%2 == 1 && ((tetInControl.get(index).getBlockPlace(i)%10 <= 1 && simRot[i]%10 >= 8)
@@ -932,7 +1086,7 @@ public class TetrisGUI extends Application{
 						//checks if a right wall kick is needed by seeing if a block either:
 						//(a) clipped out of bounds
 						//(b) intersects a block right of the rotation point
-						//(c) isn't taking up the space of a block within the Tetrimino
+						//(c) isn't taking up the space of a block within the Tetromino
 						//(d) didn't need assistance from a left wall kick
 						for( int i = 0; i < 4; i++)
 						{
@@ -952,14 +1106,14 @@ public class TetrisGUI extends Application{
 							}
 						}
 					
-						//determines if the Tetrimino is able to rotate based on if the blocks are intersecting an already existing block
+						//determines if the Tetromino is able to rotate based on if the blocks are intersecting an already existing block
 						for (int d = 0; d < 4; d++)
 						{
 							if (!grid[simRot[d]].getFill().equals(Color.WHITE) && !grid[simRot[d]].getFill().equals(Color.BLACK) && simRot[d] > -1)
 							{
 								for (int j = 0; j < 4; j++)
 								{
-									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetriminoColor);
+									grid[tetInControl.get(index).getBlockPlace(j)].setFill(currTetrominoColor);
 								}
 								return false;
 							}
@@ -990,6 +1144,8 @@ public class TetrisGUI extends Application{
 		
 		a = new Timeline(new KeyFrame(Duration.millis(speedInMilli), time));	//plays the EventHandler every second
 		a.setCycleCount(Timeline.INDEFINITE);
+		quit = new Timeline(new KeyFrame(Duration.millis(speedInMilli), quiting));	//plays the EventHandler every second
+		quit.setCycleCount(Timeline.INDEFINITE);
 		grid[0].requestFocus();	//request control for the first Rectangle of grid[] [THIS INDEX DOE NOT MOVE, IT ONLY RECEIVES INSTRUCTIONS]
 		a.play();
 	}

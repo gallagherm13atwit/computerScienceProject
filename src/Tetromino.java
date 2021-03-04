@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 import javafx.scene.paint.Color;
 
-public class Tetrimino
+public class Tetromino
 {	
 	int[] fourBlocks = new int[4];	//int[] array of the four blocks that make up the tetrimino
 	ArrayList<Integer> bottomBlocks = new ArrayList<Integer>();	//ArrayList<Integer> that holds the indexes of the tetrimino blocks on the bottom
@@ -13,26 +13,26 @@ public class Tetrimino
 	int mostRight = 0;	//int that holds the current index of a rectangle that is closest to the right side of the screen given currX
 	int rotationPoint = 0;	//int that holds the index of the fourBlocks[] that doesn't move relative to rotation index
 	int oldRotPointVal = 0;
-	int[] rotPointDiff = new int [4]; // Array that stores the location of the other 3 blocks in the Tetrimino surrounding the rotationPoint
-	int type = 0;	//int that holds the type of Tetrimino of value 0-6 (in order: Square, Line, T-Block, L-Block, Reverse L-Block, Z Block, and Reverse Z-Block)
-	Color colorBlock = Color.BLACK;	//Color object that stores the color of the Tetrimino (set during construction)
+	int[] rotPointDiff = new int [4]; // Array that stores the location of the other 3 blocks in the Tetromino surrounding the rotationPoint
+	int type = 0;	//int that holds the type of Tetromino of value 0-6 (in order: Square, Line, T-Block, L-Block, Reverse L-Block, Z Block, and Reverse Z-Block)
+	Color colorBlock = Color.BLACK;	//Color object that stores the color of the Tetromino (set during construction)
 	int[] simRot = {0, 0, 0, 0};	//int[] of the distances between values within fourBlocks[] and fourBlocks[rotationPoint] using corresponding indexes
 	int[] temp = {0, 0, 0, 0};	//temporary int[] used to dwitch values of fourBlocks[]
 	int[] rotRules = {-11, -10, -9, 1, 11, 10, 9, -1}; //the location of the block in relation to the origin on the grid
 	int lineIndex = 0; //holds the int value of the orientation of the line block
 	
 	/**
-	 * Constructor method that creates a Tetrimino object using
+	 * Constructor method that creates a Tetromino object using
 	 * the given integers blockType and rotationWidth. Based on the value of
 	 * blockType, fourBlocks[] will be made with the indexes of the
-	 * Tetrimino's blocks (from left to right, top to bottom)
+	 * Tetromino's blocks (from left to right, top to bottom)
 	 * as arranged in TetrisGUI as well as their color and
 	 * the index of the rotation point.
 	 * 
 	 * @param rotationWidth
 	 * @param blockType
 	 */
-	public Tetrimino(int blockType)
+	public Tetromino(int blockType)
 	{
 		type = blockType;
 		
@@ -609,13 +609,13 @@ public class Tetrimino
 		return colorBlock;
 	}
 
-	//Returns the Type of Tetrimino;
+	//Returns the Type of Tetromino;
 	public int getType()
 	{
 		return type;
 	}
 	
-	//Returns the rotationPoint of the Tetrimino
+	//Returns the rotationPoint of the Tetromino
 	public int getRotationPoint()
 	{
 		return rotationPoint;
@@ -643,7 +643,7 @@ public class Tetrimino
 	
 	/**
 	 * Returns bottomBlocks<Integer> after finding and
-	 * adding the Tetrimino's blocks which have no
+	 * adding the Tetromino's blocks which have no
 	 * block found under itself (example: a square
 	 * would return the indexes of the 3rd and 4th block)
 	 * 
@@ -678,7 +678,7 @@ public class Tetrimino
 
 	/**
 	 * Returns sideBlocksRight<Integer> after finding
-	 * and adding the Tetrimino's blocks (from top to bottom)
+	 * and adding the Tetromino's blocks (from top to bottom)
 	 * which are closest to the right-hand side of the screen
 	 * for each row (example: a Z-Block would return
 	 * the indexes of the 2nd and 4th block)
@@ -709,7 +709,7 @@ public class Tetrimino
 
 	/**
 	 * Returns sideBlocksLeft<Integer> after finding
-	 * and adding the Tetrimino's blocks (from bottom to top)
+	 * and adding the Tetromino's blocks (from bottom to top)
 	 * which are closest to the left-hand side of the screen
 	 * for each row (example: a Z-Block would return
 	 * the indexes of the 1st and 3rd block)
