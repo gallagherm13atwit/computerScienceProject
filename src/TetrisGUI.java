@@ -93,6 +93,7 @@ public class TetrisGUI extends Application{
 		gameOver = false;
 		mainStage = primaryStage;
 		grid = new Rectangle[numGrid];	//Rectangle array that creates the grid that shows the Tetromino objects and allows the user to play
+		tetsLeft = 7;
 		for (int c = 0; c < grid.length; c++)	//for-loop that initializes the Rectangles in grid[]
 		{
 			grid[c] = new Rectangle(50, 50);
@@ -105,8 +106,8 @@ public class TetrisGUI extends Application{
 			randomBlockType = (int) (Math.random()*7);	//uses Math.random() to store a value from 0-6 to randomBlockType
 			if (tetBag[randomBlockType] != null) {
 				tetInControl.add(new Tetromino(randomBlockType));	//initializes a new tetrimino into index i of tetInControl
-				tetsLeft--;
 				tetBag[randomBlockType] = null;
+				tetsLeft--;
 			}
 		}
 		
@@ -335,12 +336,12 @@ public class TetrisGUI extends Application{
 						}
 						blocksAreAboveNothing = true;
 						
-						/*
+						
 						//creates a new Tetromino and adds it to tetInControl
-						newRandomBlockType = (int) (Math.random()*7);
+						/*newRandomBlockType = (int) (Math.random()*7);
 						tetInControl.add(new Tetromino(newRandomBlockType));
-						updateTetComing();
-						*/
+						updateTetComing();*/
+						
 						
 						if (tetsLeft == 0) {
 							while (tetsLeft < 7) {
@@ -442,8 +443,30 @@ public class TetrisGUI extends Application{
 									grid[tetInControl.get(index).getBlockPlace(b)].setFill(currTetrominoColor);
 								}
 
-								newRandomBlockType = (int) (Math.random()*7);
+								/*newRandomBlockType = (int) (Math.random()*7);
 								tetInControl.add(new Tetromino(newRandomBlockType));
+								updateTetComing();*/
+								
+								if (tetsLeft == 0) {
+									while (tetsLeft < 7) {
+										newRandomBlockType = (int) (Math.random()*7);
+										if (tetBag[newRandomBlockType] == null) {
+											tetBag[newRandomBlockType] = new Tetromino(newRandomBlockType);
+											tetsLeft++;
+										}
+									}
+								}
+							
+								while (true) {
+									newRandomBlockType = (int) (Math.random()*7);
+									if (tetBag[newRandomBlockType] != null) {
+										tetInControl.add(new Tetromino(newRandomBlockType));
+										tetsLeft--;
+										tetBag[newRandomBlockType] = null;
+										break;
+									}
+								}
+							
 								updateTetComing();
 							}
 							else
@@ -748,6 +771,10 @@ public class TetrisGUI extends Application{
 				}
 				
 				updateTetComing();
+				
+				/*newRandomBlockType = (int) (Math.random()*7);
+				tetInControl.add(new Tetromino(newRandomBlockType));
+				updateTetComing();*/
 			}
 			
 			public void clearLines()
